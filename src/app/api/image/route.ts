@@ -6,34 +6,16 @@ export async function POST(req: Request) {
     const body = await req.json();
     prompt = body.prompt || "random text";
 
-    if (!process.env.HF_TOKEN) {
-      return NextResponse.json({ error: "HF_TOKEN is missing in .env.local" }, { status: 400 });
-    }
-
-    const response = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
-      headers: {
-        Authorization: `Bearer ${process.env.HF_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-      body: JSON.stringify({ inputs: prompt }),
-    });
-
-    if (!response.ok) {
-      const err = await response.text();
-      throw new Error(`Hugging Face API Error: ${err}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const base64 = buffer.toString("base64");
-    const imageUrl = `data:image/jpeg;base64,${base64}`;
+    // Dùng con AI Pollinations siêu tốc, không giới hạn, không cần key
+    const encodedPrompt = encodeURIComponent(prompt);
+    const randomSeed = Math.floor(Math.random() * 1000000);
+    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${randomSeed}`;
 
     return NextResponse.json({ imageUrl });
   } catch (error: any) {
     console.error("Image Gen Error:", error);
     return NextResponse.json({ 
-        error: "Lỗi tạo ảnh Hugging Face: " + error.message 
+        error: "Lỗi tạo ảnh: " + error.message 
     }, { status: 500 });
   }
 }
