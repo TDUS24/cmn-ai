@@ -1,14 +1,32 @@
 import { NextResponse } from "next/server";
+import OpenAI from "openai";
+
+// Cấu hình OpenAI (Tái sử dụng key có sẵn)
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+// Cho phép Vercel chạy tối đa 60 giây để chờ ảnh (Tránh lỗi fetch failed)
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  let prompt = "";
   try {
     const body = await req.json();
-    prompt = body.prompt || "random text";
+    const prompt = body.prompt || "random text";
 
-    // Pollinations có vẻ bị mạng nhà mày chặn hoặc đang sập, tao đổi sang xài API Airforce siêu Vip
-    const encodedPrompt = encodeURIComponent(prompt);
-    const imageUrl = `https://api.airforce/v1/imagine2?prompt=${encodedPrompt}&size=1:1`;
+    if (!process.env.OPENAI_API_KEY) {
+      return NextResponse.json({ error: "OPENAI_API_KEY is missing" }, { status: 400 });
+    }
+
+    // Dùng DALL-E 3 của OpenAI (Xịn nhất hiện nay, đéo bao giờ sập)
+    const response = await openai.images.generate({
+      model: "dall-e-3",
+      prompt: prompt,
+      n: 1,
+      size: "1024x1024",
+    });
+
+    const imageUrl = response.data[0].url;
 
     return NextResponse.json({ imageUrl });
   } catch (error: any) {
