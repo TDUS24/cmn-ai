@@ -721,5 +721,6 @@ export default function ChatInterface() {
         </p>
       </div>
     </div>
+  </div>
   );
 }
