@@ -632,10 +632,14 @@ export default function ChatInterface() {
       </main>
 
       <div className="p-4 sm:p-6 bg-gradient-to-t from-[#090A0F] via-[#090A0F] to-transparent sticky bottom-0 z-10">
-        <div 
-          className={`max-w-3xl mx-auto flex flex-col p-2.5 rounded-2xl border backdrop-blur-xl transition-all duration-300 shadow-2xl bg-[#151821]/80 border-gray-700/60 shadow-black/40 focus-within:border-indigo-500/40 focus-within:shadow-indigo-500/10`}
-        >
-          {attachments.length > 0 && (
+        <div className="relative max-w-3xl mx-auto group/input">
+          {/* Glowing Aura for Input Box (Activates on Focus) */}
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-2xl blur-md opacity-0 group-focus-within/input:opacity-40 transition-opacity duration-500 pointer-events-none" />
+          
+          <div 
+            className={`relative flex flex-col p-2.5 rounded-2xl border backdrop-blur-xl transition-all duration-300 shadow-2xl bg-[#151821]/90 border-gray-700/60 shadow-black/50 group-focus-within/input:border-white/10`}
+          >
+            {attachments.length > 0 && (
             <div className="flex flex-wrap gap-2 px-3 pt-2 pb-2 text-sm text-indigo-300 font-medium border-b border-gray-800/50 mb-2">
               {attachments.map(att => (
                 <div key={att.id} className="flex items-center gap-2 bg-gray-800/60 rounded-md p-1 border border-gray-700/50 pr-2">
@@ -656,8 +660,8 @@ export default function ChatInterface() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-3 mr-2 rounded-xl text-gray-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-all"
-              title="Đính kèm file văn bản"
+              className="p-2.5 mr-2 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 hover:scale-105 transition-all ring-1 ring-indigo-500/20"
+              title="Đính kèm file hoặc ảnh"
             >
                 <Paperclip size={20} />
               <input 
@@ -674,8 +678,8 @@ export default function ChatInterface() {
               onClick={toggleRecording}
               className={`p-3 mr-2 rounded-xl transition-all ${
                 isRecording 
-                  ? "text-red-400 bg-red-500/20 shadow-[0_0_15px_rgba(248,113,113,0.5)] animate-pulse" 
-                  : "text-gray-400 hover:text-indigo-300 hover:bg-indigo-500/10"
+                  ? "text-red-400 bg-red-500/20 shadow-[0_0_15px_rgba(248,113,113,0.5)] animate-pulse ring-1 ring-red-500/30 scale-105" 
+                  : "bg-pink-500/10 text-pink-400 hover:bg-pink-500/20 hover:text-pink-300 hover:scale-105 ring-1 ring-pink-500/20"
               }`}
               title="Nhập bằng giọng nói"
             >
@@ -710,11 +714,11 @@ export default function ChatInterface() {
             {isMediaLoading ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} className="ml-0.5" />}
           </button>
           </div>
+          </div>
         </div>
-        <p className="hidden sm:block text-center text-xs text-gray-600 mt-3 font-medium tracking-wide">
+        <p className="hidden sm:block text-center text-xs text-gray-600 mt-4 font-medium tracking-wide">
           CMN AI Neural Engine • Built by Phạm Thành Tấn ( TDUS )
         </p>
-        </div>
       </div>
     </div>
   );
