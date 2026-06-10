@@ -1,6 +1,8 @@
 import { fal } from "@fal-ai/client";
 import { NextResponse } from "next/server";
 
+export const maxDuration = 60;
+
 export async function POST(req: Request) {
   try {
     const { prompt } = await req.json();

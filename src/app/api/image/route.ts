@@ -18,9 +18,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "OPENAI_API_KEY is missing" }, { status: 400 });
     }
 
-    // Dùng DALL-E 3 của OpenAI (Xịn nhất hiện nay, đéo bao giờ sập)
+    // Tài khoản của mày chưa nạp đủ tiền lên Tier 1 nên OpenAI nó giấu mẹ con dall-e-3 rồi.
+    // Tao chuyển sang dùng dall-e-2 cho mày, ảnh vẫn ngon chán!
     const response = await openai.images.generate({
-      model: "dall-e-3",
+      model: "dall-e-2",
       prompt: prompt,
       n: 1,
       size: "1024x1024",
