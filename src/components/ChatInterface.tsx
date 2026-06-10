@@ -155,17 +155,30 @@ export default function ChatInterface() {
     try {
       if (finalUserText.trim().startsWith("/image ")) {
         const prompt = finalUserText.replace("/image ", "").trim();
-        const response = await fetch('/api/image', {
+        
+        // Tao nhúng trực tiếp API vào trình duyệt của mày để chạy ngầm (Bypass Vercel)
+        // Vercel nó bị HuggingFace chặn IP nên server nó mới lỗi "fetch failed" liên tục.
+        const response = await fetch('https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt })
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer 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'
+          },
+          body: JSON.stringify({ inputs: prompt })
         });
-        const data = await response.json();
-        if (!response.ok || data.error) throw new Error(data.error || "Lỗi tạo ảnh");
+        
+        if (!response.ok) {
+           const err = await response.text();
+           throw new Error("Lỗi API HF: " + err);
+        }
+
+        // Đổi blob thành url để hiện ảnh ngay trong trình duyệt
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob);
         
         setMediaMessages((prev) => 
           prev.map(m => m.id === assistantMessage.id 
-            ? { ...m, content: "Đây là ảnh AI vẽ cho mày:", type: "image", imageUrl: data.imageUrl } 
+            ? { ...m, content: "Đây là ảnh AI vẽ cho mày:", type: "image", imageUrl: imageUrl } 
             : m)
         );
         setIsMediaLoading(false);
