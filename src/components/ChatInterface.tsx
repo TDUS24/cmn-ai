@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, BrainCircuit, User, Loader2, Copy, Paperclip, X, Sparkles, Mic, MicOff, SquarePen, Search, Library, Folder, LayoutGrid, TerminalSquare, MoreHorizontal, MessageSquare, Trash2, Check } from "lucide-react";
+import { Send, Bot, BrainCircuit, User, Loader2, Copy, Paperclip, X, Sparkles, Mic, MicOff, SquarePen, Search, Library, Folder, LayoutGrid, TerminalSquare, MoreHorizontal, MessageSquare, Trash2, Check, Menu } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -23,6 +23,7 @@ export default function ChatInterface() {
   const [isMediaLoading, setIsMediaLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentChatId, setCurrentChatId] = useState<string>("");
   const [savedChats, setSavedChats] = useState<{id: string, title: string, messages: MediaMessage[]}[]>([]);
   const [attachments, setAttachments] = useState<{ id: string, name: string, content: string, isImage?: boolean }[]>([]);
@@ -326,11 +327,22 @@ export default function ChatInterface() {
   return (
     <div className="flex h-[100dvh] w-full bg-[#090A0F] text-gray-100 font-sans selection:bg-indigo-500/30 overflow-hidden">
       
+      {/* MOBILE OVERLAY */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden backdrop-blur-sm"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* SIDEBAR */}
-      <div className="w-[260px] bg-[#000000] border-r border-gray-800/50 flex-col hidden md:flex z-50">
+      <div className={`fixed inset-y-0 left-0 w-[260px] bg-[#000000] border-r border-gray-800/50 flex-col z-50 transition-transform duration-300 md:relative md:flex md:translate-x-0 ${isSidebarOpen ? "translate-x-0 flex" : "-translate-x-full hidden"}`}>
         <div className="p-3">
           <button 
-            onClick={createNewChat}
+            onClick={() => {
+              createNewChat();
+              setIsSidebarOpen(false);
+            }}
             className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-800/50 transition-colors text-sm font-medium group"
           >
             <div className="flex items-center gap-3">
@@ -370,6 +382,7 @@ export default function ChatInterface() {
                     onClick={() => {
                       setCurrentChatId(chat.id);
                       setMediaMessages(chat.messages);
+                      setIsSidebarOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium truncate pr-10 ${currentChatId === chat.id ? 'bg-indigo-500/20 text-indigo-300' : 'hover:bg-gray-800/50 text-gray-300'}`}
                   >
@@ -395,8 +408,14 @@ export default function ChatInterface() {
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none z-0" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-pink-600/10 rounded-full blur-[120px] pointer-events-none z-0" />
       
-      <header className="flex-none sticky top-0 z-50 flex items-center justify-center p-4 border-b border-gray-800/50 bg-[#090A0F]/80 backdrop-blur-xl shadow-lg shadow-black/20">
-        <div className="flex items-center gap-3">
+      <header className="flex-none sticky top-0 z-40 flex items-center justify-between px-4 py-3 border-b border-gray-800/50 bg-[#090A0F]/80 backdrop-blur-xl shadow-lg shadow-black/20">
+        <button 
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 -ml-2 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800/50 md:hidden"
+        >
+          <Menu size={24} />
+        </button>
+        <div className="flex items-center gap-3 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
           <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] relative overflow-hidden group">
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
             <BrainCircuit size={26} className="text-white relative z-10 drop-shadow-md" strokeWidth={1.5} />
@@ -406,9 +425,10 @@ export default function ChatInterface() {
               CMN AI
               <Sparkles size={16} className="text-yellow-400/80 animate-pulse" />
             </h1>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-indigo-400/80 font-bold -mt-1">Neural Core Engine</span>
+            <span className="text-[10px] uppercase tracking-[0.2em] text-indigo-400/80 font-bold -mt-1 hidden sm:block">Neural Core Engine</span>
           </div>
         </div>
+        <div className="w-8 md:hidden" /> {/* Spacer to balance header */}
       </header>
 
       <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto relative z-10 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
