@@ -22,7 +22,8 @@ export default function ChatInterface() {
   const [input, setInput] = useState("");
   const [isMediaLoading, setIsMediaLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [recentChats, setRecentChats] = useState<{id: string, title: string}[]>([]);
+  const [currentChatId, setCurrentChatId] = useState<string>("");
+  const [savedChats, setSavedChats] = useState<{id: string, title: string, messages: MediaMessage[]}[]>([]);
   const [attachments, setAttachments] = useState<{ id: string, name: string, content: string, isImage?: boolean }[]>([]);
   
   const [mediaMessages, setMediaMessages] = useState<MediaMessage[]>([
@@ -38,6 +39,42 @@ export default function ChatInterface() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    const loaded = localStorage.getItem("cmn_chats");
+    if (loaded) {
+      try {
+        const parsed = JSON.parse(loaded);
+        setSavedChats(parsed);
+        if (parsed.length > 0) {
+          setCurrentChatId(parsed[0].id);
+          setMediaMessages(parsed[0].messages);
+        } else {
+          setCurrentChatId(Date.now().toString());
+        }
+      } catch (e) {}
+    } else {
+      setCurrentChatId(Date.now().toString());
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!currentChatId || mediaMessages.length <= 1) return;
+    setSavedChats(prev => {
+      const existing = prev.find(c => c.id === currentChatId);
+      const title = existing ? existing.title : (mediaMessages.find(m => m.role === 'user')?.content.substring(0, 30) || "Chat mới");
+      const updatedChat = { id: currentChatId, title, messages: mediaMessages };
+      const newChats = prev.filter(c => c.id !== currentChatId);
+      const finalChats = [updatedChat, ...newChats];
+      localStorage.setItem("cmn_chats", JSON.stringify(finalChats));
+      return finalChats;
+    });
+  }, [mediaMessages, currentChatId]);
+
+  const createNewChat = () => {
+    setCurrentChatId(Date.now().toString());
+    setMediaMessages([{ id: "welcome", role: "assistant", content: "Chào bạn! Mình là Trợ lý AI. Nhập tin nhắn để trò chuyện nhé!", type: "text" }]);
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined" && ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
@@ -155,30 +192,17 @@ export default function ChatInterface() {
     try {
       if (finalUserText.trim().startsWith("/image ")) {
         const prompt = finalUserText.replace("/image ", "").trim();
-        
-        // Tao nhúng trực tiếp API vào trình duyệt của mày để chạy ngầm (Bypass Vercel)
-        // Vercel nó bị HuggingFace chặn IP nên server nó mới lỗi "fetch failed" liên tục.
-        const response = await fetch('https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell', {
+        const response = await fetch('/api/image', {
           method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer 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'
-          },
-          body: JSON.stringify({ inputs: prompt })
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
         });
-        
-        if (!response.ok) {
-           const err = await response.text();
-           throw new Error("Lỗi API HF: " + err);
-        }
-
-        // Đổi blob thành url để hiện ảnh ngay trong trình duyệt
-        const blob = await response.blob();
-        const imageUrl = URL.createObjectURL(blob);
+        const data = await response.json();
+        if (!response.ok || data.error) throw new Error(data.error || "Lỗi tạo ảnh");
         
         setMediaMessages((prev) => 
           prev.map(m => m.id === assistantMessage.id 
-            ? { ...m, content: "Đây là ảnh AI vẽ cho mày:", type: "image", imageUrl: imageUrl } 
+            ? { ...m, content: "Đây là ảnh AI vẽ cho mày:", type: "image", imageUrl: data.imageUrl } 
             : m)
         );
         setIsMediaLoading(false);
@@ -287,7 +311,7 @@ export default function ChatInterface() {
       <div className="w-[260px] bg-[#000000] border-r border-gray-800/50 flex-col hidden md:flex z-50">
         <div className="p-3">
           <button 
-            onClick={() => alert('Đang mở luồng chat mới... (Đang phát triển)')}
+            onClick={createNewChat}
             className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-gray-800/50 transition-colors text-sm font-medium group"
           >
             <div className="flex items-center gap-3">
@@ -318,12 +342,20 @@ export default function ChatInterface() {
           <button onClick={() => alert('Còn tính năng gì nữa đâu mà bấm? =))))')} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800/50 transition-colors text-sm font-medium text-gray-300">
             <MoreHorizontal size={18} className="text-gray-400" /> Thêm
           </button>
-          {recentChats.length > 0 && (
+          {savedChats.length > 0 && (
             <>
               <div className="mt-6 mb-2 px-3 text-xs font-semibold text-gray-500">Gần đây</div>
-              {recentChats.map(chat => (
-                <button key={chat.id} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-800/50 transition-colors text-sm font-medium text-gray-300 truncate">
-                  {chat.title}
+              {savedChats.map(chat => (
+                <button 
+                  key={chat.id} 
+                  onClick={() => {
+                    setCurrentChatId(chat.id);
+                    setMediaMessages(chat.messages);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium truncate ${currentChatId === chat.id ? 'bg-indigo-500/20 text-indigo-300' : 'hover:bg-gray-800/50 text-gray-300'}`}
+                >
+                  <MessageSquare size={16} className={currentChatId === chat.id ? 'text-indigo-400' : 'text-gray-500'} />
+                  <span className="truncate">{chat.title}</span>
                 </button>
               ))}
             </>
