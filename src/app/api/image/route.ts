@@ -6,10 +6,9 @@ export async function POST(req: Request) {
     const body = await req.json();
     prompt = body.prompt || "random text";
 
-    // Dùng con AI Pollinations siêu tốc, không giới hạn, không cần key
+    // Pollinations có vẻ bị mạng nhà mày chặn hoặc đang sập, tao đổi sang xài API Airforce siêu Vip
     const encodedPrompt = encodeURIComponent(prompt);
-    const randomSeed = Math.floor(Math.random() * 1000000);
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${randomSeed}`;
+    const imageUrl = `https://api.airforce/v1/imagine2?prompt=${encodedPrompt}&size=1:1`;
 
     return NextResponse.json({ imageUrl });
   } catch (error: any) {
