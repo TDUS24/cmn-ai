@@ -633,11 +633,11 @@ export default function ChatInterface() {
 
       <div className="p-4 sm:p-6 bg-gradient-to-t from-[#090A0F] via-[#090A0F] to-transparent sticky bottom-0 z-10">
         <div className="relative max-w-3xl mx-auto group/input">
-          {/* Glowing Aura for Input Box (Activates on Focus) */}
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-2xl blur-md opacity-0 group-focus-within/input:opacity-40 transition-opacity duration-500 pointer-events-none" />
+          {/* Glowing Aura for Input Box (Activates on Focus) - GPU Accelerated */}
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-2xl blur-md opacity-0 group-focus-within/input:opacity-40 transition-opacity duration-500 pointer-events-none transform-gpu will-change-opacity" />
           
           <div 
-            className={`relative flex flex-col p-2.5 rounded-2xl border backdrop-blur-xl transition-all duration-300 shadow-2xl bg-[#151821]/90 border-gray-700/60 shadow-black/50 group-focus-within/input:border-white/10`}
+            className={`relative flex flex-col p-2.5 rounded-2xl border backdrop-blur-md transition-all duration-300 shadow-2xl bg-[#151821]/80 border-gray-700/60 shadow-black/50 group-focus-within/input:border-white/10 transform-gpu`}
           >
             {attachments.length > 0 && (
             <div className="flex flex-wrap gap-2 px-3 pt-2 pb-2 text-sm text-indigo-300 font-medium border-b border-gray-800/50 mb-2">
