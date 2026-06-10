@@ -715,6 +715,28 @@ export default function ChatInterface() {
                   handleSend();
                 }
               }}
+              onPaste={(e) => {
+                const items = e.clipboardData?.items;
+                if (!items) return;
+                for (let i = 0; i < items.length; i++) {
+                  if (items[i].type.indexOf("image") !== -1) {
+                    e.preventDefault(); // Prevent default text paste if it's an image
+                    const blob = items[i].getAsFile();
+                    if (!blob) continue;
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                      const base64String = event.target?.result as string;
+                      setAttachments(prev => [...prev, {
+                        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+                        name: blob.name || `pasted_image_${Date.now()}.png`,
+                        content: base64String,
+                        isImage: true
+                      }]);
+                    };
+                    reader.readAsDataURL(blob);
+                  }
+                }
+              }}
               placeholder="Nhắn gì đi bro..."
               className="flex-1 max-h-40 min-h-[44px] bg-transparent border-none focus:ring-0 resize-none text-gray-100 placeholder-gray-500 py-3 px-2 text-base self-center"
               rows={1}
