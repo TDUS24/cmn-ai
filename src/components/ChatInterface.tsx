@@ -48,9 +48,12 @@ export default function ChatInterface() {
       try {
         const parsed = JSON.parse(loaded);
         setSavedChats(parsed);
-        if (parsed.length > 0) {
+        if (parsed.length > 0 && Array.isArray(parsed[0].messages) && parsed[0].messages.length > 0) {
           setCurrentChatId(parsed[0].id);
           setMediaMessages(parsed[0].messages);
+        } else if (parsed.length > 0) {
+          setCurrentChatId(parsed[0].id);
+          setMediaMessages([{ id: "welcome", role: "assistant", content: "Chào bạn! Mình là Trợ lý AI. Nhập tin nhắn để trò chuyện nhé!", type: "text" }]);
         } else {
           setCurrentChatId(Date.now().toString());
         }
@@ -68,7 +71,9 @@ export default function ChatInterface() {
       const updatedChat = { id: currentChatId, title, messages: mediaMessages };
       const newChats = prev.filter(c => c.id !== currentChatId);
       const finalChats = [updatedChat, ...newChats];
-      localStorage.setItem("cmn_chats", JSON.stringify(finalChats));
+      try {
+        localStorage.setItem("cmn_chats", JSON.stringify(finalChats));
+      } catch(e) { console.error("Lỗi lưu chat", e) }
       return finalChats;
     });
   }, [mediaMessages, currentChatId]);
@@ -102,18 +107,27 @@ export default function ChatInterface() {
       recognitionRef.current.lang = 'vi-VN'; // Vietnamese
 
       recognitionRef.current.onresult = (event: any) => {
+        let interimTranscript = '';
         let finalTranscript = '';
-        for (let i = 0; i < event.results.length; i++) {
-          finalTranscript += event.results[i][0].transcript;
+        // Quét từ đầu phiên ghi âm để lấy trọn vẹn câu
+        for (let i = 0; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
         }
-        setInput(finalTranscript);
+        
+        // Cập nhật giá trị input text = Text gốc lúc bắt đầu + Text mới
+        const spacer = baseInputRef.current && finalTranscript ? " " : "";
+        setInput(baseInputRef.current + spacer + finalTranscript + interimTranscript);
       };
 
       recognitionRef.current.onerror = (event: any) => {
-        console.error("Speech recognition error", event.error);
+        console.error("Lỗi nhận diện giọng nói", event.error);
         setIsRecording(false);
       };
-      
+
       recognitionRef.current.onend = () => {
         setIsRecording(false);
       };
@@ -129,6 +143,7 @@ export default function ChatInterface() {
       recognitionRef.current.stop();
       setIsRecording(false);
     } else {
+      baseInputRef.current = input; // Lưu lại text hiện có trước khi thu âm
       recognitionRef.current.start();
       setIsRecording(true);
     }
@@ -378,7 +393,11 @@ export default function ChatInterface() {
                   <button 
                     onClick={() => {
                       setCurrentChatId(chat.id);
-                      setMediaMessages(chat.messages);
+                      if (Array.isArray(chat.messages) && chat.messages.length > 0) {
+                        setMediaMessages(chat.messages);
+                      } else {
+                        setMediaMessages([{ id: "welcome", role: "assistant", content: "Chào bạn! Mình là Trợ lý AI. Nhập tin nhắn để trò chuyện nhé!", type: "text" }]);
+                      }
                       setIsSidebarOpen(false);
                     }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium truncate pr-10 ${currentChatId === chat.id ? 'bg-indigo-500/20 text-indigo-300' : 'hover:bg-gray-800/50 text-gray-300'}`}
@@ -439,7 +458,7 @@ export default function ChatInterface() {
       <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto relative z-10 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
         <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8 pb-32">
           <AnimatePresence initial={false}>
-            {allMessages.map((msg, index) => (
+            {(Array.isArray(allMessages) ? allMessages : []).map((msg, index) => (
               <motion.div
                 key={msg.id}
                 initial={{ opacity: 0, y: 15, scale: 0.95 }}
