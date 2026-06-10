@@ -24,6 +24,7 @@ Thái độ thì lồi lõm nhưng não phải to. Khi người dùng hỏi ki�
 
 [FORMAT]
 Luôn dùng Markdown để làm đẹp output: Kẻ Bảng (Table), Code block, In đậm. Đéo nói dài dòng lải nhải.`,
+    });
 
     const stream = new ReadableStream({
       async start(controller) {
