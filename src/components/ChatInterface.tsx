@@ -660,7 +660,7 @@ export default function ChatInterface() {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="p-2.5 mr-2 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 hover:scale-105 transition-all ring-1 ring-indigo-500/20"
+              className="p-3 mr-2 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 hover:text-indigo-300 hover:scale-105 transition-all ring-1 ring-indigo-500/20"
               title="Đính kèm file hoặc ảnh"
             >
                 <Paperclip size={20} />
@@ -697,7 +697,7 @@ export default function ChatInterface() {
                 }
               }}
               placeholder="Nhắn gì đi bro..."
-              className="flex-1 max-h-40 min-h-[44px] bg-transparent border-none focus:ring-0 resize-none text-gray-100 placeholder-gray-500 py-2.5 px-2 text-base"
+              className="flex-1 max-h-40 min-h-[44px] bg-transparent border-none focus:ring-0 resize-none text-gray-100 placeholder-gray-500 py-3 px-2 text-base self-center"
               rows={1}
             />
 
