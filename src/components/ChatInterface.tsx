@@ -12,8 +12,9 @@ type MediaMessage = {
   id: string;
   role: "user" | "assistant";
   content: string;
-  type?: "text" | "image";
+  type?: "text" | "image" | "video";
   imageUrl?: string;
+  videoUrl?: string;
   attachments?: { id: string, name: string, content: string, isImage?: boolean }[];
 };
 
@@ -152,8 +153,46 @@ export default function ChatInterface() {
     setIsMediaLoading(true);
 
     try {
+      if (finalUserText.trim().startsWith("/image ")) {
+        const prompt = finalUserText.replace("/image ", "").trim();
+        const response = await fetch('/api/image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        const data = await response.json();
+        if (!response.ok || data.error) throw new Error(data.error || "Lỗi tạo ảnh");
+        
+        setMediaMessages((prev) => 
+          prev.map(m => m.id === assistantMessage.id 
+            ? { ...m, content: "Đây là ảnh AI vẽ cho mày:", type: "image", imageUrl: data.imageUrl } 
+            : m)
+        );
+        setIsMediaLoading(false);
+        return;
+      }
+      
+      if (finalUserText.trim().startsWith("/video ")) {
+        const prompt = finalUserText.replace("/video ", "").trim();
+        const response = await fetch('/api/video', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt })
+        });
+        const data = await response.json();
+        if (!response.ok || data.error) throw new Error(data.error || "Lỗi tạo video");
+        
+        setMediaMessages((prev) => 
+          prev.map(m => m.id === assistantMessage.id 
+            ? { ...m, content: "Đây là video AI quay cho mày:", type: "video", videoUrl: data.videoUrl } 
+            : m)
+        );
+        setIsMediaLoading(false);
+        return;
+      }
+
       const chatContext = mediaMessages
-        .filter(m => m.id !== "welcome" && m.type !== "image")
+        .filter(m => m.id !== "welcome" && m.type !== "image" && m.type !== "video")
         .map(m => {
           if (m.attachments && m.attachments.length > 0) {
             const parts: any[] = [];
@@ -440,6 +479,18 @@ export default function ChatInterface() {
                           alt="AI Generated" 
                           className="w-full max-w-sm h-auto object-cover rounded-xl shadow-lg"
                           onLoad={() => scrollToBottom()}
+                        />
+                      </div>
+                    )}
+                    {msg.type === "video" && msg.videoUrl && (
+                      <div className="mt-4 rounded-xl overflow-hidden border border-gray-700/50 bg-black/50 flex items-center justify-center relative group">
+                        <video 
+                          src={msg.videoUrl} 
+                          controls
+                          autoPlay
+                          loop
+                          className="w-full max-w-sm h-auto object-cover rounded-xl shadow-lg"
+                          onLoadedData={() => scrollToBottom()}
                         />
                       </div>
                     )}

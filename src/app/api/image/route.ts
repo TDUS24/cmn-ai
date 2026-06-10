@@ -1,9 +1,4 @@
-import { OpenAI } from "openai";
 import { NextResponse } from "next/server";
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export async function POST(req: Request) {
   let prompt = "";
@@ -11,25 +6,34 @@ export async function POST(req: Request) {
     const body = await req.json();
     prompt = body.prompt || "random text";
 
-    const response = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: prompt,
-      n: 1,
-      size: "1024x1024",
-    });
-
-    return NextResponse.json({ imageUrl: response.data[0].url });
-  } catch (error: any) {
-    console.error("OpenAI Image Gen Error:", error);
-    
-    if (error.message && error.message.includes("billing")) {
-        return NextResponse.json({ 
-            error: "Tài khoản OpenAI của mày hết tiền hoặc chưa nạp 5$. Vào platform.openai.com nạp đạn đi!" 
-        }, { status: 400 });
+    if (!process.env.HF_TOKEN) {
+      return NextResponse.json({ error: "HF_TOKEN is missing in .env.local" }, { status: 400 });
     }
 
+    const response = await fetch("https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell", {
+      headers: {
+        Authorization: `Bearer ${process.env.HF_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+      body: JSON.stringify({ inputs: prompt }),
+    });
+
+    if (!response.ok) {
+      const err = await response.text();
+      throw new Error(`Hugging Face API Error: ${err}`);
+    }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const base64 = buffer.toString("base64");
+    const imageUrl = `data:image/jpeg;base64,${base64}`;
+
+    return NextResponse.json({ imageUrl });
+  } catch (error: any) {
+    console.error("Image Gen Error:", error);
     return NextResponse.json({ 
-        error: "Lỗi DALL-E 3: " + error.message 
+        error: "Lỗi tạo ảnh Hugging Face: " + error.message 
     }, { status: 500 });
   }
 }
