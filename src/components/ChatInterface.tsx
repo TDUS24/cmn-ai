@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, BrainCircuit, User, Loader2, Copy, Paperclip, X, Sparkles, Mic, MicOff, SquarePen, Search, Library, Folder, LayoutGrid, TerminalSquare, MoreHorizontal, MessageSquare, Trash2, Check, Menu } from "lucide-react";
+import { Send, Bot, BrainCircuit, User, Loader2, Copy, Paperclip, X, Sparkles, Mic, MicOff, SquarePen, Search, Library, Folder, LayoutGrid, TerminalSquare, MoreHorizontal, MessageSquare, Trash2, Check, Menu, ClipboardCopy, Crown } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -91,9 +91,6 @@ export default function ChatInterface() {
         createNewChat();
       }
     }
-  };
-    setCurrentChatId(Date.now().toString());
-    setMediaMessages([{ id: "welcome", role: "assistant", content: "Chào bạn! Mình là Trợ lý AI. Nhập tin nhắn để trò chuyện nhé!", type: "text" }]);
   };
 
   useEffect(() => {
@@ -416,16 +413,24 @@ export default function ChatInterface() {
           <Menu size={24} />
         </button>
         <div className="flex items-center gap-3 absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0">
-          <div className="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-[0_0_20px_rgba(168,85,247,0.4)] relative overflow-hidden group">
-            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
-            <BrainCircuit size={26} className="text-white relative z-10 drop-shadow-md" strokeWidth={1.5} />
+          <div className="relative group cursor-pointer mr-2">
+            {/* Glowing Aura */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-xl blur-md opacity-40 group-hover:opacity-100 group-hover:blur-lg animate-pulse transition-all duration-500" />
+            {/* Main Logo Box */}
+            <div className="relative p-2.5 rounded-xl bg-gray-900 border border-white/10 shadow-2xl overflow-hidden">
+              {/* Inner Gradient Tint */}
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/50 via-purple-500/40 to-pink-500/30" />
+              {/* Auto sweep effect */}
+              <div className="absolute inset-0 w-[200%] bg-gradient-to-r from-transparent via-white/40 to-transparent animate-sweep" />
+              <BrainCircuit size={26} className="text-white relative z-10 animate-brain-pulse" strokeWidth={1.5} />
+            </div>
           </div>
           <div className="flex flex-col">
-            <h1 className="text-2xl font-black bg-gradient-to-r from-white via-indigo-100 to-gray-400 bg-clip-text text-transparent tracking-tight flex items-center gap-2">
+            <h1 className="text-2xl font-black bg-gradient-to-r from-cyan-400 via-indigo-400 to-purple-500 bg-clip-text text-transparent tracking-tight flex items-center gap-2 drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">
               CMN AI
-              <Sparkles size={16} className="text-yellow-400/80 animate-pulse" />
+              <Sparkles size={18} className="text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)] animate-pulse" />
             </h1>
-            <span className="text-[10px] uppercase tracking-[0.2em] text-indigo-400/80 font-bold -mt-1 hidden sm:block">Neural Core Engine</span>
+            <span className="text-[10px] uppercase tracking-[0.25em] bg-gradient-to-r from-pink-400 to-orange-400 bg-clip-text text-transparent font-bold -mt-0.5 hidden sm:block drop-shadow-sm">Neural Core Engine</span>
           </div>
         </div>
         <div className="w-8 md:hidden" /> {/* Spacer to balance header */}
@@ -434,7 +439,7 @@ export default function ChatInterface() {
       <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto relative z-10 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent">
         <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-6 sm:space-y-8 pb-32">
           <AnimatePresence initial={false}>
-            {allMessages.map((msg) => (
+            {allMessages.map((msg, index) => (
               <motion.div
                 key={msg.id}
                 initial={{ opacity: 0, y: 15, scale: 0.95 }}
@@ -445,8 +450,8 @@ export default function ChatInterface() {
                 <div className={`flex max-w-[85%] sm:max-w-[80%] gap-3 sm:gap-4 ${msg.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
                   <div className="flex-shrink-0 mt-1">
                     {msg.role === "user" ? (
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-pink-500 to-orange-400 flex items-center justify-center shadow-lg shadow-pink-500/20 ring-2 ring-[#090A0F]">
-                        <User size={18} className="text-white" />
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-500 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 ring-2 ring-[#090A0F]">
+                        <User size={18} className="text-white drop-shadow-md" />
                       </div>
                     ) : (
                       <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30 ring-2 ring-[#090A0F]">
@@ -458,7 +463,7 @@ export default function ChatInterface() {
                   <div 
                     className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"} max-w-full`}
                   >
-                    {msg.role === "assistant" && msg.content === "" && isMediaLoading ? (
+                    {msg.role === "assistant" && msg.content === "" && isMediaLoading && index === allMessages.length - 1 ? (
                       <div className="relative px-6 py-4 text-[15px] leading-relaxed shadow-xl backdrop-blur-sm bg-[#151821]/90 text-gray-200 rounded-2xl rounded-tl-sm border border-gray-700/50 shadow-black/40 flex items-center gap-3 mt-1 w-fit">
                         <div className="flex gap-1.5">
                           <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '0ms' }} />
@@ -469,6 +474,25 @@ export default function ChatInterface() {
                       </div>
                     ) : msg.content ? (
                       <div className={`relative flex flex-col group/msg ${msg.role === "user" ? "items-end" : "items-start"} w-full`}>
+                      {msg.role === "assistant" && msg.content !== "..." && msg.type !== "image" && msg.type !== "video" && (msg.content.length > 80 || msg.content.includes('\n')) && (
+                        <div className="flex items-center justify-end w-full mb-1.5 opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => {
+                              navigator.clipboard.writeText(msg.content);
+                              setCopiedId(msg.id);
+                              setTimeout(() => setCopiedId(null), 2000);
+                            }}
+                            className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-400 hover:text-gray-200 transition-colors"
+                            title="Sao chép toàn bộ tin nhắn"
+                          >
+                            {copiedId === msg.id ? (
+                              <><Check size={14} className="text-green-400" /> <span className="text-green-400">Đã chép</span></>
+                            ) : (
+                              <><Copy size={14} /> <span>Sao chép</span></>
+                            )}
+                          </button>
+                        </div>
+                      )}
                         <div 
                           className={`relative px-5 py-3.5 text-[15px] leading-relaxed shadow-xl backdrop-blur-sm w-fit max-w-full overflow-hidden break-words
                             ${msg.role === "user" 
@@ -504,17 +528,20 @@ export default function ChatInterface() {
                             
                             return !isInline ? (
                               <div className="my-4 rounded-xl overflow-hidden border border-gray-700/50 bg-[#0E1117] shadow-lg max-w-full">
-                                <div className="flex items-center justify-between px-4 py-2 bg-gray-800/80 border-b border-gray-700/50">
-                                  <span className="text-xs font-mono text-gray-400 capitalize">{language}</span>
+                                <div className="flex items-center justify-between px-4 py-2.5 bg-[#2f2f2f] text-gray-300 border-b border-gray-700/50">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-bold">&lt;/&gt;</span>
+                                    <span className="text-xs font-sans font-medium capitalize">{language}</span>
+                                  </div>
                                   <button
                                     onClick={() => navigator.clipboard.writeText(codeString)}
-                                    className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition-colors"
+                                    className="text-gray-400 hover:text-white transition-colors"
+                                    title="Copy code"
                                   >
-                                    <Copy size={12} />
-                                    <span>Copy code</span>
+                                    <Copy size={14} />
                                   </button>
                                 </div>
-                                <div className="p-4 overflow-x-auto text-sm max-w-full">
+                                <div className="p-4 overflow-x-auto text-sm max-w-full bg-[#0d0d0d]">
                                   <SyntaxHighlighter
                                     style={vscDarkPlus as any}
                                     language={language}
@@ -572,26 +599,6 @@ export default function ChatInterface() {
                         {msg.content}
                       </ReactMarkdown>
                       </div>
-                      
-                      {msg.role === "assistant" && msg.content !== "..." && msg.type !== "image" && msg.type !== "video" && (
-                        <div className="flex items-center gap-2 mt-1.5 opacity-0 group-hover/msg:opacity-100 transition-opacity">
-                          <button 
-                            onClick={() => {
-                              navigator.clipboard.writeText(msg.content);
-                              setCopiedId(msg.id);
-                              setTimeout(() => setCopiedId(null), 2000);
-                            }}
-                            className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium text-gray-400 hover:text-white bg-gray-800/40 hover:bg-gray-700/60 rounded-md transition-colors"
-                            title="Sao chép tin nhắn"
-                          >
-                            {copiedId === msg.id ? (
-                              <><Check size={12} className="text-green-400" /> <span className="text-green-400">Đã chép</span></>
-                            ) : (
-                              <><Copy size={12} /> Sao chép</>
-                            )}
-                          </button>
-                        </div>
-                      )}
                       </div>
                     ) : null}
                     {msg.type === "image" && msg.imageUrl && (

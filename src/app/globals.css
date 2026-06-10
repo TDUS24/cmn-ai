@@ -37,3 +37,21 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgba(79, 70, 229, 0.3) transparent;
 }
+
+@keyframes sweep {
+  0%, 20% { transform: translateX(-150%) skewX(12deg); }
+  80%, 100% { transform: translateX(250%) skewX(12deg); }
+}
+
+@keyframes brain-pulse {
+  0%, 100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 8px rgba(255,255,255,0.5)); }
+  50% { transform: scale(1.15) rotate(12deg); filter: drop-shadow(0 0 16px rgba(255,255,255,1)); }
+}
+
+.animate-sweep {
+  animation: sweep 5s ease-in-out infinite;
+}
+
+.animate-brain-pulse {
+  animation: brain-pulse 3s ease-in-out infinite;
+}
