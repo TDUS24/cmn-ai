@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, Bot, BrainCircuit, User, Loader2, Copy, Paperclip, X, Sparkles, Mic, MicOff, SquarePen, Search, Library, Folder, LayoutGrid, TerminalSquare, MoreHorizontal, MessageSquare } from "lucide-react";
+import { Send, Bot, BrainCircuit, User, Loader2, Copy, Paperclip, X, Sparkles, Mic, MicOff, SquarePen, Search, Library, Folder, LayoutGrid, TerminalSquare, MoreHorizontal, MessageSquare, Trash2, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -22,6 +22,7 @@ export default function ChatInterface() {
   const [input, setInput] = useState("");
   const [isMediaLoading, setIsMediaLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [currentChatId, setCurrentChatId] = useState<string>("");
   const [savedChats, setSavedChats] = useState<{id: string, title: string, messages: MediaMessage[]}[]>([]);
   const [attachments, setAttachments] = useState<{ id: string, name: string, content: string, isImage?: boolean }[]>([]);
@@ -72,6 +73,24 @@ export default function ChatInterface() {
   }, [mediaMessages, currentChatId]);
 
   const createNewChat = () => {
+    setCurrentChatId(Date.now().toString());
+    setMediaMessages([{ id: "welcome", role: "assistant", content: "Chào bạn! Mình là Trợ lý AI. Nhập tin nhắn để trò chuyện nhé!", type: "text" }]);
+  };
+
+  const deleteChat = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const updatedChats = savedChats.filter(c => c.id !== id);
+    setSavedChats(updatedChats);
+    localStorage.setItem("cmn_chats", JSON.stringify(updatedChats));
+    if (currentChatId === id) {
+      if (updatedChats.length > 0) {
+        setCurrentChatId(updatedChats[0].id);
+        setMediaMessages(updatedChats[0].messages);
+      } else {
+        createNewChat();
+      }
+    }
+  };
     setCurrentChatId(Date.now().toString());
     setMediaMessages([{ id: "welcome", role: "assistant", content: "Chào bạn! Mình là Trợ lý AI. Nhập tin nhắn để trò chuyện nhé!", type: "text" }]);
   };
@@ -179,7 +198,7 @@ export default function ChatInterface() {
     const assistantMessage: MediaMessage = {
       id: (Date.now() + 1).toString(),
       role: "assistant",
-      content: "...",
+      content: "",
       type: "text",
     };
 
@@ -346,17 +365,24 @@ export default function ChatInterface() {
             <>
               <div className="mt-6 mb-2 px-3 text-xs font-semibold text-gray-500">Gần đây</div>
               {savedChats.map(chat => (
-                <button 
-                  key={chat.id} 
-                  onClick={() => {
-                    setCurrentChatId(chat.id);
-                    setMediaMessages(chat.messages);
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium truncate ${currentChatId === chat.id ? 'bg-indigo-500/20 text-indigo-300' : 'hover:bg-gray-800/50 text-gray-300'}`}
-                >
-                  <MessageSquare size={16} className={currentChatId === chat.id ? 'text-indigo-400' : 'text-gray-500'} />
-                  <span className="truncate">{chat.title}</span>
-                </button>
+                <div key={chat.id} className="relative group w-full">
+                  <button 
+                    onClick={() => {
+                      setCurrentChatId(chat.id);
+                      setMediaMessages(chat.messages);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-sm font-medium truncate pr-10 ${currentChatId === chat.id ? 'bg-indigo-500/20 text-indigo-300' : 'hover:bg-gray-800/50 text-gray-300'}`}
+                  >
+                    <MessageSquare size={16} className={currentChatId === chat.id ? 'text-indigo-400' : 'text-gray-500 flex-shrink-0'} />
+                    <span className="truncate">{chat.title}</span>
+                  </button>
+                  <button 
+                    onClick={(e) => deleteChat(e, chat.id)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-md opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               ))}
             </>
           )}
@@ -410,17 +436,27 @@ export default function ChatInterface() {
                   </div>
                   
                   <div 
-                    className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}
+                    className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"} max-w-full`}
                   >
-                    {msg.content && (
-                      <div 
-                        className={`relative px-5 py-3.5 text-[15px] leading-relaxed shadow-xl backdrop-blur-sm max-w-full overflow-hidden break-words
-                          ${msg.role === "user" 
-                            ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-2xl rounded-tr-sm border border-indigo-400/20" 
-                            : "bg-[#151821]/90 text-gray-200 rounded-2xl rounded-tl-sm border border-gray-700/50 shadow-black/40"
-                          }
-                        `}
-                      >
+                    {msg.role === "assistant" && msg.content === "" && isMediaLoading ? (
+                      <div className="relative px-6 py-4 text-[15px] leading-relaxed shadow-xl backdrop-blur-sm bg-[#151821]/90 text-gray-200 rounded-2xl rounded-tl-sm border border-gray-700/50 shadow-black/40 flex items-center gap-3 mt-1 w-fit">
+                        <div className="flex gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <span className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </div>
+                        <span className="text-sm font-medium text-indigo-300/80 animate-pulse">Đợi xíu, đang vắt óc suy nghĩ...</span>
+                      </div>
+                    ) : msg.content ? (
+                      <div className={`relative flex flex-col group/msg ${msg.role === "user" ? "items-end" : "items-start"} w-full`}>
+                        <div 
+                          className={`relative px-5 py-3.5 text-[15px] leading-relaxed shadow-xl backdrop-blur-sm w-fit max-w-full overflow-hidden break-words
+                            ${msg.role === "user" 
+                              ? "bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-2xl rounded-tr-sm border border-indigo-400/20" 
+                              : "bg-[#151821]/90 text-gray-200 rounded-2xl rounded-tl-sm border border-gray-700/50 shadow-black/40"
+                            }
+                          `}
+                        >
                         {msg.attachments && msg.attachments.length > 0 && (
                           <div className="flex flex-wrap gap-2 mb-3">
                             {msg.attachments.map(att => (
@@ -516,7 +552,28 @@ export default function ChatInterface() {
                         {msg.content}
                       </ReactMarkdown>
                       </div>
-                    )}
+                      
+                      {msg.role === "assistant" && msg.content !== "..." && msg.type !== "image" && msg.type !== "video" && (
+                        <div className="flex items-center gap-2 mt-1.5 opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => {
+                              navigator.clipboard.writeText(msg.content);
+                              setCopiedId(msg.id);
+                              setTimeout(() => setCopiedId(null), 2000);
+                            }}
+                            className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium text-gray-400 hover:text-white bg-gray-800/40 hover:bg-gray-700/60 rounded-md transition-colors"
+                            title="Sao chép tin nhắn"
+                          >
+                            {copiedId === msg.id ? (
+                              <><Check size={12} className="text-green-400" /> <span className="text-green-400">Đã chép</span></>
+                            ) : (
+                              <><Copy size={12} /> Sao chép</>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                      </div>
+                    ) : null}
                     {msg.type === "image" && msg.imageUrl && (
                       <div className="mt-4 rounded-xl overflow-hidden border border-gray-700/50 bg-black/50 flex items-center justify-center relative group">
                         <img 
